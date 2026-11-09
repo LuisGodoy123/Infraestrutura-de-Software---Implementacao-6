@@ -1,0 +1,27 @@
+EVIDENCIAS - Implementacao 6 (Algoritmo de Banker)
+Login: lagi
+Ambiente: Windows 11 + WSL Ubuntu, gcc 15.2.0
+
+======================================================================
+[2026-11-09] Passo 1 - parse_int (input.c)
+======================================================================
+Comando: gcc -Wall -Wextra -std=c99 input.c test_parse.c -o test_parse && ./test_parse
+Saida:
+[0] -> 0 v=0
+[10] -> 0 v=10
+[007] -> 0 v=7
+[2147483647] -> 0 v=2147483647
+[2147483648] -> -1 v=-99
+[99999999999999999999] -> -1 v=-99
+[-1] -> -1 v=-99
+[+3] -> -1 v=-99
+[] -> -1 v=-99
+[12abc] -> -1 v=-99
+[ 5] -> -1 v=-99
+[5 ] -> -1 v=-99
+[abc] -> -1 v=-99
+Compilacao: sem warnings.
+CORRETO porque: 0, 10, 007 e 2147483647 sao aceitos; 2147483648 e
+99999999999999999999 (overflow), -1 e +3 (sinal), "" (vazio), 12abc (lixo no
+fim), " 5" e "5 " (espaco) e abc (sem digito) sao rejeitados, e v permanece
+-99 nos casos rejeitados.
