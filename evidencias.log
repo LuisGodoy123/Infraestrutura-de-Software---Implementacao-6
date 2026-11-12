@@ -25,3 +25,43 @@ CORRETO porque: 0, 10, 007 e 2147483647 sao aceitos; 2147483648 e
 99999999999999999999 (overflow), -1 e +3 (sinal), "" (vazio), 12abc (lixo no
 fim), " 5" e "5 " (espaco) e abc (sem digito) sao rejeitados, e v permanece
 -99 nos casos rejeitados.
+
+======================================================================
+[2026-11-11] Passo 2 - read_args (input.c)
+======================================================================
+Comando: gcc -Wall -Wextra -std=c99 input.c test_args.c -o test_args
+Compilacao: sem warnings. Cada caso abaixo tambem foi rodado com
+-fsanitize=address (nenhum erro de memoria nem vazamento, inclusive nos
+caminhos de erro).
+Saida (test_args imprime m e os valores; erros vao para stderr):
+$ ./test_args 10 5 7
+m=3: 10 5 7
+exit=0
+$ ./test_args 0 0
+m=2: 0 0
+exit=0
+$ ./test_args
+Erro: uso: ./banker <instancias> [<instancias> ...]
+exit=1
+$ ./test_args 10 -5 7
+Erro: argumento invalido '-5' (esperado inteiro nao negativo)
+exit=1
+$ ./test_args 10 abc 7
+Erro: argumento invalido 'abc' (esperado inteiro nao negativo)
+exit=1
+$ ./test_args 10 5.5
+Erro: argumento invalido '5.5' (esperado inteiro nao negativo)
+exit=1
+$ ./test_args 99999999999999999999 5
+Erro: argumento invalido '99999999999999999999' (esperado inteiro nao negativo)
+exit=1
+$ ./test_args 2147483648
+Erro: argumento invalido '2147483648' (esperado inteiro nao negativo)
+exit=1
+$ ./test_args ""
+Erro: argumento invalido '' (esperado inteiro nao negativo)
+exit=1
+CORRETO porque: 10 5 7 vira m=3 com os valores certos; 0 e aceito (decisao:
+o PDF nao proibe); sem argumentos, negativo, texto, decimal, overflow
+(99999999999999999999 e 2147483648) e string vazia sao rejeitados com mensagem
+em stderr e retorno -1, sem nada em stdout.
