@@ -65,3 +65,81 @@ CORRETO porque: 10 5 7 vira m=3 com os valores certos; 0 e aceito (decisao:
 o PDF nao proibe); sem argumentos, negativo, texto, decimal, overflow
 (99999999999999999999 e 2147483648) e string vazia sao rejeitados com mensagem
 em stderr e retorno -1, sem nada em stdout.
+
+======================================================================
+[2026-11-11] Passo 3 - read_customers (input.c)
+======================================================================
+Decisoes: (a) MAX maior que o total de instancias do recurso e erro de
+formato; (b) linhas em branco so sao aceitas no fim do arquivo (no meio e
+erro); (c) CRLF e falta de \n final sao aceitos; (d) sem espacos ao redor das
+virgulas (formato do livro, "7,5,3").
+Arquivos de teste: tests/customer_*.txt (customer_ok.txt = arquivo do professor).
+Comando: gcc -Wall -Wextra -std=c99 input.c test_customers.c -o test_cust
+Compilacao: sem warnings. Todos os casos tambem rodaram com
+-fsanitize=address (sem erro de memoria nem vazamento, inclusive nos erros).
+test_customers.c imprime n, m e a matriz MAX; erros vao para stderr.
+Saida:
+$ ./test_cust customer_ok.txt 10 5 7
+n=5 m=3
+7 5 3
+3 2 2
+9 0 2
+2 2 2
+4 3 3
+exit=0
+$ ./test_cust customer_crlf.txt 10 5 7          (arquivo com \r\n)
+n=5 m=3 e a mesma matriz acima, exit=0
+$ ./test_cust customer_blank_end.txt 10 5 7     (2 linhas + 2 linhas em branco)
+n=2 m=3
+7 5 3
+3 2 2
+exit=0
+$ ./test_cust customer_blank_mid.txt 10 5 7
+Erro: customer_blank_mid.txt: linha em branco no meio do arquivo
+exit=1
+$ ./test_cust customer_few_fields.txt 10 5 7
+Erro: customer_few_fields.txt linha 2: campos a menos (esperado 3)
+exit=1
+$ ./test_cust customer_many_fields.txt 10 5 7
+Erro: customer_many_fields.txt linha 2: campos a mais (esperado 3)
+exit=1
+$ ./test_cust customer_nonnumeric.txt 10 5 7
+Erro: customer_nonnumeric.txt linha 2: valor invalido 'a'
+exit=1
+$ ./test_cust customer_negative.txt 10 5 7
+Erro: customer_negative.txt linha 2: valor invalido '-2'
+exit=1
+$ ./test_cust customer_empty_field.txt 10 5 7
+Erro: customer_empty_field.txt linha 2: valor invalido ''
+exit=1
+$ ./test_cust customer_over_total.txt 10 5 7
+Erro: customer_over_total.txt linha 2: maximo 11 excede o total 10 do recurso 0
+exit=1
+$ ./test_cust customer_overflow.txt 10 5 7
+Erro: customer_overflow.txt linha 2: valor invalido '99999999999999999999'
+exit=1
+$ ./test_cust customer_space.txt 10 5 7
+Erro: customer_space.txt linha 2: valor invalido ' 2'
+exit=1
+$ ./test_cust customer_empty.txt 10 5 7
+Erro: customer_empty.txt nao tem nenhum cliente
+exit=1
+$ ./test_cust customer_only_blank.txt 10 5 7
+Erro: customer_only_blank.txt nao tem nenhum cliente
+exit=1
+$ ./test_cust nao_existe.txt 10 5 7
+Erro: nao foi possivel abrir 'nao_existe.txt'
+exit=1
+$ ./test_cust customer_ok.txt 10 5               (argumentos a menos que as colunas)
+Erro: customer_ok.txt linha 1: campos a mais (esperado 2)
+exit=1
+$ ./test_cust customer_ok.txt 10 5 7 1           (argumentos a mais que as colunas)
+Erro: customer_ok.txt linha 1: campos a menos (esperado 4)
+exit=1
+CORRETO porque: o arquivo do professor da n=5 e a matriz certa; CRLF e a
+ausencia de \n no fim dao o mesmo resultado; linhas em branco no fim sao
+ignoradas e no meio sao rejeitadas; campos a mais/menos, texto, negativo,
+campo vazio, overflow, espaco, MAX acima do total, arquivo vazio e arquivo
+inexistente sao rejeitados com mensagem em stderr e retorno -1; os dois
+ultimos casos cobrem o erro (1) do PDF (numero de argumentos diferente do
+numero de colunas do customer.txt).
