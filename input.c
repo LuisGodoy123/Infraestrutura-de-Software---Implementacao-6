@@ -3,7 +3,6 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
-#include <ctype.h>
 #include "banker.h"
 
 int parse_int(const char *s, int *out)
@@ -11,34 +10,34 @@ int parse_int(const char *s, int *out)
     char *end;
     long v;
 
-    if (!isdigit((unsigned char)s[0]))
+    if (s[0] < '0' || s[0] > '9')
         return -1;
     errno = 0;
     v = strtol(s, &end, 10);
     if (errno == ERANGE || *end != '\0' || v > INT_MAX)
         return -1;
-    *out = (int)v;
+    *out = v;
     return 0;
 }
 
 int read_args(int argc, char *argv[], int **resources)
 {
     int m = argc - 1;
-    int i;
     int *r;
+    int i;
 
     if (m < 1) {
-        fprintf(stderr, "Erro: uso: ./banker <instancias> [<instancias> ...]\n");
+        fprintf(stderr, "Erro: uso: ./banker <recurso1> <recurso2> ...\n");
         return -1;
     }
     r = malloc(m * sizeof(int));
     if (r == NULL) {
-        fprintf(stderr, "Erro: memoria insuficiente\n");
+        fprintf(stderr, "Erro: sem memoria\n");
         return -1;
     }
     for (i = 0; i < m; i++) {
         if (parse_int(argv[i + 1], &r[i]) != 0) {
-            fprintf(stderr, "Erro: argumento invalido '%s' (esperado inteiro nao negativo)\n", argv[i + 1]);
+            fprintf(stderr, "Erro: argumento invalido: %s\n", argv[i + 1]);
             free(r);
             return -1;
         }
@@ -47,84 +46,89 @@ int read_args(int argc, char *argv[], int **resources)
     return m;
 }
 
+static int parse_row(char *line, int m, int *row)
+{
+    char *p = line;
+    char *comma;
+    int j;
+
+    for (j = 0; j < m; j++) {
+        comma = strchr(p, ',');
+        if (comma != NULL)
+            *comma = '\0';
+        if (parse_int(p, &row[j]) != 0)
+            return -1;
+        if (comma == NULL)
+            return j == m - 1 ? 0 : -1;
+        p = comma + 1;
+    }
+    return -1;
+}
+
 int read_customers(const char *path, int m, const int *resources, int **max)
 {
     FILE *f;
     char line[4096];
     int *data = NULL;
-    int *tmp;
+    int *aux;
     int n = 0;
     int lineno = 0;
     int blank = 0;
-    size_t len;
-    char *p, *comma;
-    int j;
+    int erro = 0;
+    int len, j;
 
     f = fopen(path, "r");
     if (f == NULL) {
-        fprintf(stderr, "Erro: nao foi possivel abrir '%s'\n", path);
+        fprintf(stderr, "Erro: nao foi possivel abrir %s\n", path);
         return -1;
     }
     while (fgets(line, sizeof(line), f) != NULL) {
         lineno++;
         len = strlen(line);
-        if (len > 0 && line[len - 1] != '\n' && !feof(f)) {
-            fprintf(stderr, "Erro: %s linha %d: linha longa demais\n", path, lineno);
-            goto fail;
+        while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
+            len--;
+            line[len] = '\0';
         }
-        while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r'))
-            line[--len] = '\0';
         if (len == 0) {
             blank = 1;
             continue;
         }
         if (blank) {
             fprintf(stderr, "Erro: %s: linha em branco no meio do arquivo\n", path);
-            goto fail;
+            erro = 1;
+            break;
         }
-        tmp = realloc(data, (n + 1) * m * sizeof(int));
-        if (tmp == NULL) {
-            fprintf(stderr, "Erro: memoria insuficiente\n");
-            goto fail;
+        aux = realloc(data, (n + 1) * m * sizeof(int));
+        if (aux == NULL) {
+            fprintf(stderr, "Erro: sem memoria\n");
+            erro = 1;
+            break;
         }
-        data = tmp;
-        p = line;
+        data = aux;
+        if (parse_row(line, m, &data[n * m]) != 0) {
+            fprintf(stderr, "Erro: %s linha %d: formato invalido\n", path, lineno);
+            erro = 1;
+            break;
+        }
         for (j = 0; j < m; j++) {
-            comma = strchr(p, ',');
-            if (j < m - 1) {
-                if (comma == NULL) {
-                    fprintf(stderr, "Erro: %s linha %d: campos a menos (esperado %d)\n", path, lineno, m);
-                    goto fail;
-                }
-                *comma = '\0';
-            } else if (comma != NULL) {
-                fprintf(stderr, "Erro: %s linha %d: campos a mais (esperado %d)\n", path, lineno, m);
-                goto fail;
-            }
-            if (parse_int(p, &data[n * m + j]) != 0) {
-                fprintf(stderr, "Erro: %s linha %d: valor invalido '%s'\n", path, lineno, p);
-                goto fail;
-            }
             if (data[n * m + j] > resources[j]) {
-                fprintf(stderr, "Erro: %s linha %d: maximo %d excede o total %d do recurso %d\n",
-                        path, lineno, data[n * m + j], resources[j], j);
-                goto fail;
+                fprintf(stderr, "Erro: %s linha %d: maximo maior que o total do recurso %d\n", path, lineno, j);
+                erro = 1;
             }
-            if (comma != NULL)
-                p = comma + 1;
         }
+        if (erro)
+            break;
         n++;
     }
-    if (n == 0) {
-        fprintf(stderr, "Erro: %s nao tem nenhum cliente\n", path);
-        goto fail;
-    }
     fclose(f);
+    if (!erro && n == 0) {
+        fprintf(stderr, "Erro: %s nao tem clientes\n", path);
+        erro = 1;
+    }
+    if (erro) {
+        free(data);
+        return -1;
+    }
     *max = data;
     return n;
-
-fail:
-    free(data);
-    fclose(f);
-    return -1;
 }

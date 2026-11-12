@@ -143,3 +143,62 @@ campo vazio, overflow, espaco, MAX acima do total, arquivo vazio e arquivo
 inexistente sao rejeitados com mensagem em stderr e retorno -1; os dois
 ultimos casos cobrem o erro (1) do PDF (numero de argumentos diferente do
 numero de colunas do customer.txt).
+
+======================================================================
+[2026-11-11] Refatoracao de input.c (mesmo comportamento, codigo mais simples)
+======================================================================
+Mudancas: parse_int sem ctype.h (compara com '0' e '9'); read_customers sem
+goto (flag erro + break) e com a divisao da linha em uma funcao auxiliar
+static parse_row; mensagens de erro encurtadas ("formato invalido" no lugar
+de campos a mais/menos/valor invalido); removida a checagem de linha maior
+que o buffer (4096). Os mesmos testes dos passos 1, 2 e 3 foram rodados
+de novo (WSL, gcc 15.2.0, -Wall -Wextra -std=c99, e -fsanitize=address nos
+passos 2 e 3).
+Compilacao: sem warnings.
+
+Passo 1 (parse_int): as 13 linhas saem identicas as do passo 1.
+
+Passo 2 (read_args), ASan ok em todos:
+$ ./test_args 10 5 7                     -> m=3: 10 5 7, exit=0
+$ ./test_args 0 0                        -> m=2: 0 0, exit=0
+$ ./test_args                            -> Erro: uso: ./banker <recurso1> <recurso2> ...  exit=1
+$ ./test_args 10 -5 7                    -> Erro: argumento invalido: -5  exit=1
+$ ./test_args 10 abc 7                   -> Erro: argumento invalido: abc  exit=1
+$ ./test_args 10 5.5                     -> Erro: argumento invalido: 5.5  exit=1
+$ ./test_args 99999999999999999999 5     -> Erro: argumento invalido: 99999999999999999999  exit=1
+$ ./test_args 2147483648                 -> Erro: argumento invalido: 2147483648  exit=1
+$ ./test_args ""                         -> Erro: argumento invalido:  exit=1
+
+Passo 3 (read_customers), ASan ok em todos:
+$ ./test_cust customer_ok.txt 10 5 7     -> n=5 m=3, matriz do professor, exit=0
+$ ./test_cust customer_crlf.txt 10 5 7   -> n=5 m=3, mesma matriz, exit=0
+$ ./test_cust customer_blank_end.txt 10 5 7 -> n=2 m=3, exit=0
+$ ./test_cust customer_blank_mid.txt 10 5 7
+Erro: customer_blank_mid.txt: linha em branco no meio do arquivo   exit=1
+$ ./test_cust customer_few_fields.txt 10 5 7
+Erro: customer_few_fields.txt linha 2: formato invalido   exit=1
+$ ./test_cust customer_many_fields.txt 10 5 7
+Erro: customer_many_fields.txt linha 2: formato invalido   exit=1
+$ ./test_cust customer_nonnumeric.txt 10 5 7
+Erro: customer_nonnumeric.txt linha 2: formato invalido   exit=1
+$ ./test_cust customer_negative.txt 10 5 7
+Erro: customer_negative.txt linha 2: formato invalido   exit=1
+$ ./test_cust customer_empty_field.txt 10 5 7
+Erro: customer_empty_field.txt linha 2: formato invalido   exit=1
+$ ./test_cust customer_over_total.txt 10 5 7
+Erro: customer_over_total.txt linha 2: maximo maior que o total do recurso 0   exit=1
+$ ./test_cust customer_overflow.txt 10 5 7
+Erro: customer_overflow.txt linha 2: formato invalido   exit=1
+$ ./test_cust customer_space.txt 10 5 7
+Erro: customer_space.txt linha 2: formato invalido   exit=1
+$ ./test_cust customer_empty.txt 10 5 7
+Erro: customer_empty.txt nao tem clientes   exit=1
+$ ./test_cust customer_only_blank.txt 10 5 7
+Erro: customer_only_blank.txt nao tem clientes   exit=1
+$ ./test_cust nao_existe.txt 10 5 7
+Erro: nao foi possivel abrir nao_existe.txt   exit=1
+$ ./test_cust customer_ok.txt 10 5       -> Erro: customer_ok.txt linha 1: formato invalido  exit=1
+$ ./test_cust customer_ok.txt 10 5 7 1   -> Erro: customer_ok.txt linha 1: formato invalido  exit=1
+CORRETO porque: os 3 passos mantem o mesmo resultado (aceitos e rejeitados
+iguais aos de antes, mesmos codigos de saida, sem erro de memoria); so mudou
+o texto das mensagens de erro.
