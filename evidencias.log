@@ -273,3 +273,43 @@ valores certos e o "*" no lugar; CRLF e falta de \n final funcionam; todos os
 formatos invalidos listados acima sao rejeitados com mensagem em stderr e
 retorno -1; os dois ultimos casos cobrem o erro (1) do PDF (numero de
 argumentos diferente do numero de valores nos comandos).
+
+======================================================================
+[2026-11-13] Ajuste para seguir estritamente o PDF (remocao de extras)
+======================================================================
+Alteracoes em input.c (nada alem do que o PDF pede, exceto CRLF e linha em
+branco no fim do arquivo, que o proprio roteiro do projeto exige):
+ 1. customer.txt vazio ou so com linhas em branco deixou de ser erro: o PDF
+    diz que o numero de linhas indica o numero de clientes (0 linhas = 0
+    clientes). read_customers devolve n=0.
+ 2. commands.txt agora aceita exatamente um espaco entre os campos (formato do
+    PDF). strtok removido; espaco duplo, espaco no fim da linha e "* " sao
+    formato invalido.
+ 3. Linha em branco no meio dos arquivos passou a ser tratada como qualquer
+    outra linha fora do formato: "Erro: <arquivo> linha N: formato invalido".
+Mantido por necessidade: cliente fora de 0..n-1 e erro (sem isso o indice sai
+do vetor e o programa falharia, o que o PDF proibe).
+Compilacao: sem warnings; 50 execucoes com -fsanitize=address, nenhum
+problema.
+Saidas que mudaram:
+$ ./test_cust customer_empty.txt 10 5 7        -> n=0 m=3, exit=0
+$ ./test_cust customer_only_blank.txt 10 5 7   -> n=0 m=3, exit=0
+$ ./test_cust customer_blank_mid.txt 10 5 7
+Erro: customer_blank_mid.txt linha 3: formato invalido   exit=1
+$ ./test_cmd commands_blank_mid.txt 5 3
+Erro: commands_blank_mid.txt linha 3: formato invalido   exit=1
+$ ./test_cmd commands_double_space.txt 5 3     (RQ  0 1 1 1)
+Erro: commands_double_space.txt linha 2: comando invalido   exit=1
+$ ./test_cmd commands_trailing_space.txt 5 3   (RQ 0 1 1 1 )
+Erro: commands_trailing_space.txt linha 2: comando invalido   exit=1
+$ ./test_cmd commands_star_space.txt 5 3       (* )
+Erro: commands_star_space.txt linha 2: comando invalido   exit=1
+$ ./test_cmd commands_star_only.txt 5 3        (so "*", sem \n final)
+count=1   exit=0
+$ ./test_cmd commands_ok.txt 0 3               (0 clientes: RQ 0 fora do intervalo)
+Erro: commands_ok.txt linha 1: comando invalido   exit=1
+$ ./test_cmd commands_star_only.txt 0 3        -> count=1, exit=0
+Os demais casos (customer_* e commands_*) deram o mesmo resultado de antes.
+CORRETO porque: o arquivo do professor continua dando n=5 e count=11; os
+formatos fora do PDF (espacos extras, linha vazia no meio) sao rejeitados
+como formato invalido; arquivo sem clientes e lido como 0 clientes.

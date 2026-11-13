@@ -94,7 +94,7 @@ int read_customers(const char *path, int m, int **max)
             continue;
         }
         if (blank) {
-            fprintf(stderr, "Erro: %s: linha em branco no meio do arquivo\n", path);
+            fprintf(stderr, "Erro: %s linha %d: formato invalido\n", path, lineno);
             erro = 1;
             break;
         }
@@ -113,10 +113,6 @@ int read_customers(const char *path, int m, int **max)
         n++;
     }
     fclose(f);
-    if (!erro && n == 0) {
-        fprintf(stderr, "Erro: %s nao tem clientes\n", path);
-        erro = 1;
-    }
     if (erro) {
         free(data);
         return -1;
@@ -125,44 +121,57 @@ int read_customers(const char *path, int m, int **max)
     return n;
 }
 
-static int next_int(int *out)
+static int next_int(char **p, int *out)
 {
-    char *tok = strtok(NULL, " ");
+    char *space;
+    int r;
 
-    if (tok == NULL)
+    if (*p == NULL)
         return -1;
-    return parse_int(tok, out);
+    space = strchr(*p, ' ');
+    if (space != NULL)
+        *space = '\0';
+    r = parse_int(*p, out);
+    if (space == NULL)
+        *p = NULL;
+    else
+        *p = space + 1;
+    return r;
 }
 
 static int parse_command(char *line, int n, int m, Command *c)
 {
-    char *tok = strtok(line, " ");
+    char *p;
+    char *space;
     int j;
 
     c->amount = NULL;
     c->customer = 0;
-    if (tok == NULL)
-        return -1;
-    if (strcmp(tok, "*") == 0) {
+    if (strcmp(line, "*") == 0) {
         c->type = '*';
-        return strtok(NULL, " ") == NULL ? 0 : -1;
+        return 0;
     }
-    if (strcmp(tok, "RQ") == 0)
+    space = strchr(line, ' ');
+    if (space == NULL)
+        return -1;
+    *space = '\0';
+    if (strcmp(line, "RQ") == 0)
         c->type = 'Q';
-    else if (strcmp(tok, "RL") == 0)
+    else if (strcmp(line, "RL") == 0)
         c->type = 'L';
     else
         return -1;
-    if (next_int(&c->customer) != 0 || c->customer >= n)
+    p = space + 1;
+    if (next_int(&p, &c->customer) != 0 || c->customer >= n)
         return -1;
     c->amount = malloc(m * sizeof(int));
     if (c->amount == NULL)
         return -2;
     for (j = 0; j < m; j++) {
-        if (next_int(&c->amount[j]) != 0)
+        if (next_int(&p, &c->amount[j]) != 0)
             break;
     }
-    if (j < m || strtok(NULL, " ") != NULL) {
+    if (j < m || p != NULL) {
         free(c->amount);
         c->amount = NULL;
         return -1;
@@ -199,7 +208,7 @@ int read_commands(const char *path, int n, int m, Command **cmds)
             continue;
         }
         if (blank) {
-            fprintf(stderr, "Erro: %s: linha em branco no meio do arquivo\n", path);
+            fprintf(stderr, "Erro: %s linha %d: formato invalido\n", path, lineno);
             erro = 1;
             break;
         }
