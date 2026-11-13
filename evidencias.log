@@ -202,3 +202,74 @@ $ ./test_cust customer_ok.txt 10 5 7 1   -> Erro: customer_ok.txt linha 1: forma
 CORRETO porque: os 3 passos mantem o mesmo resultado (aceitos e rejeitados
 iguais aos de antes, mesmos codigos de saida, sem erro de memoria); so mudou
 o texto das mensagens de erro.
+
+======================================================================
+[2026-11-13] Mudanca de decisao - MAX maior que o total deixa de ser erro
+======================================================================
+Motivo: o PDF so exige erro para (1) numero de argumentos diferente do numero
+de colunas/valores dos arquivos e (2) arquivo ausente, ilegivel ou em formato
+diferente. MAX > total nao e nenhum dos dois, entao tratar como erro poderia
+rejeitar uma entrada valida. read_customers perdeu o parametro resources.
+$ ./test_cust customer_over_total.txt 10 5 7
+n=2 m=3
+7 5 3
+11 2 2
+exit=0
+Os demais 16 casos de customer_*.txt rodaram de novo com o mesmo resultado
+de antes (ASan ok em todos).
+CORRETO porque: a linha "11,2,2" com total 10 agora e lida normalmente.
+
+======================================================================
+[2026-11-13] Passo 4 - read_commands (input.c)
+======================================================================
+Decisoes: comandos RQ/RL/* diferenciam maiusculas (rq e invalido); cliente
+fora de 0..n-1, numero de valores diferente de m, comando desconhecido, valor
+nao numerico/negativo/overflow e "*" com argumentos sao erro; linhas em branco
+so no fim do arquivo; arquivo vazio e valido (0 comandos). O arquivo inteiro
+e validado antes de executar qualquer comando (estrategia 1a).
+Arquivos de teste: tests/commands_*.txt (commands_ok.txt = arquivo do professor).
+Comando: gcc -Wall -Wextra -std=c99 input.c test_commands.c -o test_cmd
+Compilacao: sem warnings; ASan ok em todos os casos (inclusive erro depois de
+comandos ja lidos, sem vazamento).
+test_cmd <arquivo> <n> <m> imprime cada comando (Q=RQ, L=RL, *).
+$ ./test_cmd commands_ok.txt 5 3
+count=11
+Q c=0: 0 2 1
+Q c=2: 3 0 2
+Q c=1: 2 0 0
+Q c=4: 0 0 2
+L c=0: 0 1 1
+Q c=3: 2 1 1
+* c=0:
+Q c=4: 4 0 0
+Q c=1: 1 0 2
+Q c=0: 0 2 0
+Q c=2: 0 1 0
+exit=0
+$ ./test_cmd commands_crlf.txt 5 3          -> count=3, exit=0
+$ ./test_cmd commands_blank_end.txt 5 3     -> count=2, exit=0
+$ ./test_cmd commands_empty.txt 5 3         -> count=0, exit=0
+$ ./test_cmd commands_blank_mid.txt 5 3
+Erro: commands_blank_mid.txt: linha em branco no meio do arquivo   exit=1
+$ ./test_cmd commands_unknown.txt 5 3       (XX 0 1 1 1)
+Erro: commands_unknown.txt linha 2: comando invalido   exit=1
+$ ./test_cmd commands_lowercase.txt 5 3     (rq 0 1 1 1)       idem, exit=1
+$ ./test_cmd commands_few_fields.txt 5 3    (RQ 0 1 1)         idem, exit=1
+$ ./test_cmd commands_many_fields.txt 5 3   (RQ 0 1 1 1 1)     idem, exit=1
+$ ./test_cmd commands_no_customer.txt 5 3   (RL)               idem, exit=1
+$ ./test_cmd commands_nonnumeric.txt 5 3    (RQ 0 a 1 1)       idem, exit=1
+$ ./test_cmd commands_negative.txt 5 3      (RQ 0 -1 1 1)      idem, exit=1
+$ ./test_cmd commands_overflow.txt 5 3      (valor 99999999999999999999) idem, exit=1
+$ ./test_cmd commands_customer_out.txt 5 3  (RQ 5 1 1 1, so ha clientes 0..4) idem, exit=1
+$ ./test_cmd commands_star_extra.txt 5 3    (* 1)              idem, exit=1
+$ ./test_cmd nao_existe.txt 5 3
+Erro: nao foi possivel abrir nao_existe.txt   exit=1
+$ ./test_cmd commands_ok.txt 5 2            (menos recursos que valores)
+Erro: commands_ok.txt linha 1: comando invalido   exit=1
+$ ./test_cmd commands_ok.txt 5 4            (mais recursos que valores)
+Erro: commands_ok.txt linha 1: comando invalido   exit=1
+CORRETO porque: o arquivo do professor da 11 comandos na ordem certa com os
+valores certos e o "*" no lugar; CRLF e falta de \n final funcionam; todos os
+formatos invalidos listados acima sao rejeitados com mensagem em stderr e
+retorno -1; os dois ultimos casos cobrem o erro (1) do PDF (numero de
+argumentos diferente do numero de valores nos comandos).
