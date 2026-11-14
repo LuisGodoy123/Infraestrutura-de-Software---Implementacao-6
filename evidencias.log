@@ -313,3 +313,26 @@ Os demais casos (customer_* e commands_*) deram o mesmo resultado de antes.
 CORRETO porque: o arquivo do professor continua dando n=5 e count=11; os
 formatos fora do PDF (espacos extras, linha vazia no meio) sao rejeitados
 como formato invalido; arquivo sem clientes e lido como 0 clientes.
+
+======================================================================
+[2026-11-14] Passo 5 - is_safe (banker.c)
+======================================================================
+Algoritmo de seguranca do livro: work = available, finish[] = 0; repete
+procurando um cliente nao terminado com need <= work, soma o alloc dele em
+work e marca finish; o estado e seguro se todos terminam. Retorna 1 seguro,
+0 inseguro, -1 sem memoria. Com 0 clientes retorna 1 sem alocar.
+Comando: gcc -Wall -Wextra -std=c99 banker.c test_safe.c -o test_safe && ./test_safe
+Compilacao: sem warnings; ASan ok.
+Saida:
+estado do professor no * -> 1
+apos RQ 1 1 0 2 -> 1
+apos RQ 0 0 2 0 -> 0
+1 cliente, need 5, available 0 -> 0
+1 cliente, need 0, available 0 -> 1
+0 clientes -> 1
+CORRETO porque: o estado do exemplo (available 3 3 2) e seguro (sequencia
+P1, P3, P4, P0, P2); depois de P1 receber 1 0 2 continua seguro; depois de
+P0 receber 0 2 0 (available 2 1 0) nenhum cliente consegue terminar, e o
+resultado e inseguro, igual a mensagem "denied because result in an unsafe
+state" do result.txt do professor; os casos de borda (need maior que o
+available, need zero, zero clientes) tambem dao o resultado esperado.
