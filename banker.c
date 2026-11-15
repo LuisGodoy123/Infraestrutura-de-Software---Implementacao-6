@@ -2,6 +2,33 @@
 #include <stdlib.h>
 #include "banker.h"
 
+int init_state(State *s, int n, int m, const int *resources, const int *max)
+{
+    int i;
+
+    s->n = n;
+    s->m = m;
+    s->available = malloc(m * sizeof(int));
+    s->max = malloc(n * m * sizeof(int));
+    s->alloc = calloc(n * m, sizeof(int));
+    s->need = malloc(n * m * sizeof(int));
+    if (s->available == NULL || (n > 0 && (s->max == NULL || s->alloc == NULL || s->need == NULL))) {
+        fprintf(stderr, "Erro: sem memoria\n");
+        free(s->available);
+        free(s->max);
+        free(s->alloc);
+        free(s->need);
+        return -1;
+    }
+    for (i = 0; i < m; i++)
+        s->available[i] = resources[i];
+    for (i = 0; i < n * m; i++) {
+        s->max[i] = max[i];
+        s->need[i] = max[i];
+    }
+    return 0;
+}
+
 int is_safe(const State *s)
 {
     int *work;

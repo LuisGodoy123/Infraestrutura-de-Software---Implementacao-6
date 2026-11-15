@@ -336,3 +336,31 @@ P0 receber 0 2 0 (available 2 1 0) nenhum cliente consegue terminar, e o
 resultado e inseguro, igual a mensagem "denied because result in an unsafe
 state" do result.txt do professor; os casos de borda (need maior que o
 available, need zero, zero clientes) tambem dao o resultado esperado.
+
+======================================================================
+[2026-11-15] Passo 6 - init_state (banker.c)
+======================================================================
+Monta o estado inicial: available = copia dos totais, max = copia do
+customer.txt, alloc = zeros, need = max (nada alocado ainda). Copia os
+vetores, entao quem chama continua dono dos seus. Retorna 0 ou -1 (sem
+memoria, liberando o que ja tinha alocado). Com 0 clientes nao exige
+alocacao das matrizes.
+Comando: gcc -Wall -Wextra -std=c99 banker.c test_init.c -o test_init && ./test_init
+Compilacao: sem warnings; ASan ok. O teste de is_safe (passo 5) foi rodado
+de novo e deu o mesmo resultado.
+Saida:
+init_state -> 0 n=5 m=3
+available: 10 5 7
+max: 7 5 3 3 2 2 9 0 2 2 2 2 4 3 3
+alloc: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+need: 7 5 3 3 2 2 9 0 2 2 2 2 4 3 3
+is_safe -> 1
+copia: available[0]=10 max[0]=7 need[0]=7
+0 clientes: init_state -> 0 n=0 m=3
+available: 10 5 7
+is_safe -> 1
+CORRETO porque: com ./banker 10 5 7 e o customer.txt do professor, o estado
+inicial tem available 10 5 7, alloc zerado e need igual ao max; e seguro;
+alterar os vetores originais (res[0]=99, max[0]=99) depois do init nao muda o
+estado (copia); com 0 clientes o estado e criado sem erro.
+Nao testado: o caminho de falta de memoria (malloc retornando NULL).
