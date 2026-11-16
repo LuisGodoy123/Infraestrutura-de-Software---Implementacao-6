@@ -77,3 +77,36 @@ int is_safe(const State *s)
     free(finish);
     return ok;
 }
+
+int request_resources(State *s, int customer, const int *request)
+{
+    int m = s->m;
+    int *need = &s->need[customer * m];
+    int *alloc = &s->alloc[customer * m];
+    int j, r;
+
+    for (j = 0; j < m; j++) {
+        if (request[j] > need[j])
+            return REQ_EXCEEDS_MAX;
+    }
+    for (j = 0; j < m; j++) {
+        if (request[j] > s->available[j])
+            return REQ_NOT_ENOUGH;
+    }
+    for (j = 0; j < m; j++) {
+        s->available[j] -= request[j];
+        alloc[j] += request[j];
+        need[j] -= request[j];
+    }
+    r = is_safe(s);
+    if (r == 1)
+        return REQ_OK;
+    for (j = 0; j < m; j++) {
+        s->available[j] += request[j];
+        alloc[j] -= request[j];
+        need[j] += request[j];
+    }
+    if (r == 0)
+        return REQ_UNSAFE;
+    return REQ_ERROR;
+}

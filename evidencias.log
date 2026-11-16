@@ -364,3 +364,39 @@ inicial tem available 10 5 7, alloc zerado e need igual ao max; e seguro;
 alterar os vetores originais (res[0]=99, max[0]=99) depois do init nao muda o
 estado (copia); com 0 clientes o estado e criado sem erro.
 Nao testado: o caminho de falta de memoria (malloc retornando NULL).
+
+======================================================================
+[2026-11-16] Passo 7 - request_resources (banker.c)
+======================================================================
+Ordem das checagens (a do livro): (1) pedido > need -> REQ_EXCEEDS_MAX (1);
+(2) pedido > available -> REQ_NOT_ENOUGH (2); (3) aplica o pedido, roda
+is_safe e, se nao for seguro, desfaz -> REQ_UNSAFE (3); seguro -> REQ_OK (0);
+falta de memoria em is_safe -> REQ_ERROR (4) (tambem desfaz). Se o pedido
+passa do maximo e tambem do available, vale o maximo (primeira checagem).
+Comando: gcc -Wall -Wextra -std=c99 banker.c test_request.c -o test_req && ./test_req
+Compilacao: sem warnings; ASan ok.
+O teste repete os comandos do commands.txt do professor ate o "*". O RL 0 0 1 1
+foi feito a mao dentro do teste (a funcao de release e o proximo passo).
+Saida (codigo devolvido e available/alloc do cliente 0 apos cada pedido):
+RQ 0 0 2 1 -> 0   available: 10 3 6 | alloc c0: 0 2 1
+RQ 2 3 0 2 -> 0   available: 7 3 4
+RQ 1 2 0 0 -> 0   available: 5 3 4
+RQ 4 0 0 2 -> 0   available: 5 3 2
+RL 0 0 1 1 (manual no teste)   available: 5 4 3 | alloc c0: 0 1 0
+RQ 3 2 1 1 -> 0   available: 3 3 2
+alloc: 0 1 0 2 0 0 3 0 2 2 1 1 0 0 2
+need: 7 4 3 1 2 2 6 0 0 0 1 1 4 3 1
+RQ 4 4 0 0 -> 2   available: 3 3 2   (nao ha recursos; estado igual)
+RQ 1 1 0 2 -> 0   available: 2 3 0
+RQ 0 0 2 0 -> 3   available: 2 3 0 | alloc c0: 0 1 0   (inseguro; desfeito)
+RQ 2 0 1 0 -> 1   available: 2 3 0   (excede o maximo; estado igual)
+RQ 4 9 0 0 -> 1   available: 2 3 0   (excede maximo e available: vale o maximo)
+RQ 3 0 0 0 -> 0   available: 2 3 0   (pedido zerado: aceito, nada muda)
+CORRETO porque: o estado no ponto do "*" (available 3 3 2, alloc
+0 1 0 / 2 0 0 / 3 0 2 / 2 1 1 / 0 0 2 e need 7 4 3 / 1 2 2 / 6 0 0 / 0 1 1 /
+4 3 1) e exatamente a tabela do result.txt do professor; os quatro ultimos
+comandos do exemplo dao os mesmos resultados do professor (RQ 4 4 0 0 sem
+recursos suficientes, RQ 1 1 0 2 alocado, RQ 0 0 2 0 negado por estado
+inseguro, RQ 2 0 1 0 negado por exceder o maximo); apos cada negacao o
+available e o alloc ficam iguais aos de antes (rollback correto).
+Nao testado: o caminho REQ_ERROR (falta de memoria dentro de is_safe).
