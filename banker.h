@@ -1,6 +1,8 @@
 #ifndef BANKER_H
 #define BANKER_H
 
+#include <stdio.h>
+
 typedef struct {
     char type;
     int customer;
@@ -32,5 +34,6 @@ int init_state(State *s, int n, int m, const int *resources, const int *max);
 int is_safe(const State *s);
 int request_resources(State *s, int customer, const int *request);
 int release_resources(State *s, int customer, const int *release);
+void print_state(FILE *out, const State *s);
 
 #endif

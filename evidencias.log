@@ -434,3 +434,31 @@ alloc do cliente 0 volta a 0 1 0, igual ao que o request_resources do passo 7
 esperava; liberar tudo o que o cliente tem devolve o need ao valor do max
 (cliente 4: need 4 3 3 = max); liberar mais do que tem ou de um cliente sem
 nada devolve -1 e nao altera o estado.
+
+======================================================================
+[2026-11-16] Passo 9 - print_state (output.c)
+======================================================================
+Escreve a tabela do comando "*" em um FILE: cabecalho, uma linha por cliente
+(MAX | ALLOCATION | NEED, cada numero seguido de espaco; MAX preenchido ate
+10 colunas e ALLOCATION ate 12, como no exemplo) e a linha AVAILABLE. Formato
+tirado do result.txt do professor (o texto extraido do PDF perde os espacos).
+Comando: gcc -Wall -Wextra -std=c99 banker.c output.c test_print.c -o test_print
+Compilacao: banker.c e output.c sem warnings (o unico aviso e do arquivo de
+teste temporario, argv sem uso); ASan ok.
+O teste repete os comandos do professor ate o "*" e imprime o estado.
+Saida (cat -A mostra o fim de cada linha):
+MAXIMUM   |   ALLOCATION  |   NEED$
+7 5 3     |   0 1 0       |   7 4 3 $
+3 2 2     |   2 0 0       |   1 2 2 $
+9 0 2     |   3 0 2       |   6 0 0 $
+2 2 2     |   2 1 1       |   0 1 1 $
+4 3 3     |   0 0 2       |   4 3 1 $
+AVAILABLE 3 3 2 $
+Comparacao: diff <(sed -n '7,13p' result.txt) saida  ->  MATCH EXATO
+            cmp  -> bytes identicos
+Outros formatos (sem referencia do professor, so para ver que nao quebra):
+2 recursos com numeros de 2 e 3 digitos e 0 clientes imprimem sem erro.
+CORRETO porque: as linhas 7 a 13 do result.txt do professor (cabecalho,
+5 linhas da tabela e AVAILABLE, com os espacos finais) saem identicas.
+Observacao: o PDF so mostra 3 recursos; para outras quantidades o
+preenchimento e a continuacao natural da mesma regra (nao ha exemplo).
