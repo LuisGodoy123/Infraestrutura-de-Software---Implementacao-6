@@ -556,3 +556,25 @@ Cobertura do formato: com este passo, todos os tipos de linha do result.txt
 do professor (17 linhas: 6 Allocate, 1 Release, tabela de 6 linhas + AVAILABLE,
 1 not enough, 1 unsafe, 1 maximum allocation) tem uma funcao que gera a linha
 byte a byte. Falta ligar tudo na main.
+
+======================================================================
+[2026-11-16] Passo 15 - free_state (banker.c)
+======================================================================
+Libera os quatro vetores do State (available, max, alloc, need). Serve para
+a main nao vazar memoria; os vetores do init_state sao copias, entao nao ha
+free duplo com os vetores de quem chamou.
+Comando: gcc -Wall -Wextra -std=c99 banker.c test_free.c -o test_free
+Compilacao: sem warnings. O teste cria um estado com 5 clientes (e faz um
+pedido) e outro com 0 clientes, e libera os dois com free_state.
+Saida com -fsanitize=address:
+--- com free_state ---
+exit=0
+fim
+ASAN: ok (nenhum vazamento)
+--- sem chamar free_state (o teste confirma que detecta vazamento) ---
+exit=1
+ASAN: vazamento detectado
+SUMMARY: AddressSanitizer: 207 byte(s) leaked in 8 allocation(s).
+CORRETO porque: com free_state o ASan nao acusa nada (inclusive no estado
+com 0 clientes); sem a chamada o mesmo teste acusa vazamento, entao o teste
+realmente verifica a liberacao.

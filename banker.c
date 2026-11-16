@@ -129,3 +129,11 @@ int release_resources(State *s, int customer, const int *release)
     }
     return 0;
 }
+
+void free_state(State *s)
+{
+    free(s->available);
+    free(s->max);
+    free(s->alloc);
+    free(s->need);
+}
