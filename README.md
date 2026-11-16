@@ -8,12 +8,8 @@ Implementação em C do algoritmo de Banker (Silberschatz, *Operating System Con
 
 | Arquivo | O que faz |
 |---|---|
-| `main.c` | Orquestra: lê e valida tudo antes de executar, roda os comandos e escreve o `result.txt`. |
-| `input.c` | Leitura e validação dos argumentos, do `customer.txt` e do `commands.txt`. |
-| `banker.c` | Lógica do algoritmo: estado, verificação de segurança, pedido (`RQ`) e liberação (`RL`). |
-| `output.c` | Escrita das linhas e da tabela do `result.txt`. |
-| `banker.h` | Structs e protótipos. |
-| `Makefile` | `make` gera `banker`; `make clean` remove objetos, executável e `result.txt`. |
+| `banker.c` | Programa inteiro: leitura e validação dos argumentos, do `customer.txt` e do `commands.txt`; estado, verificação de segurança, pedido (`RQ`) e liberação (`RL`); escrita do `result.txt`; `main`. |
+| `Makefile` | `make` gera `banker`; `make clean` remove o executável e o `result.txt`. |
 | `evidencias.log` | Registro dos testes feitos durante o desenvolvimento. |
 
 ## Como compilar e executar

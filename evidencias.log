@@ -772,4 +772,24 @@ Implementacao 80%) com o codigo ja em portugues e a pasta enxuta.
    identico ao do professor (MATCH EXATO, 755 bytes).
    sha256 do lagi.tar:
    7cafc0eec0a4717f1a8e73050be506724bada8ad62444c4ff40ccf8ca8177943
-Pendente (fora do codigo): relatorio em PDF, prints, push e upload no Classroom.
+
+[2026-11-16] Codigo unificado em um unico banker.c (sem banker.h)
+Motivo: o PDF so exige codigo e Makefile; o .h so servia para compartilhar
+structs e prototipos entre os .c. Nao muda o comportamento.
+Alteracoes:
+ - main.c, input.c, output.c e banker.h removidos; todo o codigo em banker.c,
+   na ordem input (converter_inteiro ... liberar_comandos), algoritmo
+   (iniciar_estado ... liberar_recursos), saida (imprimir_*) e main.
+ - Structs Estado/Comando e o enum PED_* no topo do banker.c; os prototipos
+   deixaram de ser necessarios (cada funcao vem antes de quem a usa) e as
+   funcoes passaram a static.
+ - Makefile: banker depende so de banker.c; clean remove banker e result.txt.
+ - README.md atualizado.
+Verificacao (pasta temporaria, WSL):
+ - make sem warnings; gcc -std=c99 -pedantic -O2 -Wall -Wextra sem warnings.
+ - ./banker 10 5 7 com os arquivos do professor: saida 0, stdout e stderr
+   vazios, result.txt MATCH EXATO (755 bytes).
+ - testes.sh: 44 passaram, 0 falharam; com asan: 44 passaram, 0 falharam.
+ - verificacao_cruzada.py: casos: 1500 falhas: 0 (mesma cobertura de antes).
+ - lagi.tar regenerado com lagi/{banker.c, Makefile}.
+

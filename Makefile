@@ -1,14 +1,10 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c99
-OBJS = main.o banker.o input.o output.o
 
-banker: $(OBJS)
-	$(CC) $(CFLAGS) -o banker $(OBJS)
-
-%.o: %.c banker.h
-	$(CC) $(CFLAGS) -c $<
+banker: banker.c
+	$(CC) $(CFLAGS) -o banker banker.c
 
 clean:
-	rm -f $(OBJS) banker result.txt
+	rm -f banker result.txt
 
 .PHONY: clean
