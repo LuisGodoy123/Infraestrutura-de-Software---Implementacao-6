@@ -656,3 +656,44 @@ arquivos de entrada estao em CRLF; todos os erros exigidos pelo PDF (numero
 de argumentos diferente das colunas/valores dos arquivos, arquivo
 inexistente, arquivo em formato diferente) terminam com mensagem em stderr,
 saida diferente de zero e sem result.txt; nada vai para stdout.
+
+======================================================================
+[2026-11-16] Passo 18 - Makefile, testes.sh, README e revisao final
+======================================================================
+Makefile: primeiro alvo "banker" (make sem argumentos funciona), flags
+-Wall -Wextra -std=c99, regra %.o dependente de banker.h, e "clean" que
+remove objetos, o executavel e result.txt. Sem -lm (nao usa math.h).
+testes.sh: compila com make, roda cada caso de tests/ num diretorio
+temporario e confere codigo de saida, stdout vazio, existencia/ausencia de
+result.txt e, no exemplo do professor, o result.txt byte a byte
+(tests/expected_result_ok.txt). "bash testes.sh asan" compila com
+AddressSanitizer.
+Ambiente: Ubuntu 26.04 (WSL), gcc 15.2.0, GNU Make 4.4.1.
+
+$ bash testes.sh
+gcc -Wall -Wextra -std=c99 -c main.c
+gcc -Wall -Wextra -std=c99 -c banker.c
+gcc -Wall -Wextra -std=c99 -c input.c
+gcc -Wall -Wextra -std=c99 -c output.c
+gcc -Wall -Wextra -std=c99 -o banker main.o banker.o input.o output.o
+44 passaram, 0 falharam      (sem nenhum warning de compilacao)
+$ bash testes.sh asan
+44 passaram, 0 falharam      (nenhum erro de memoria nem vazamento)
+
+Verificacao de que o teste reprova de verdade (mutacao): numa copia, o
+espaco final de "are not enough ... request a b c " foi removido de
+output.c; testes.sh deu "FAIL" nos 2 testes do exemplo do professor
+("42 passaram, 2 falharam"). Copia descartada.
+
+Compilacao adicional: gcc -O2 -pedantic -Wall -Wextra -std=c99 -> sem warnings.
+
+Simulacao da entrega e da correcao do professor:
+ - lagi.tar com lagi/{main.c,banker.c,input.c,output.c,banker.h,Makefile}
+   (so codigo e Makefile, como o PDF manda para o Classroom);
+ - extraido em outra pasta: "make" gera banker sem warnings; com os arquivos
+   do professor, ./banker 10 5 7 sai com 0, stdout e stderr vazios, e
+   diff do result.txt gerado com o do professor  ->  MATCH EXATO;
+ - make clean deixa so os fontes e o Makefile.
+CORRETO porque: o programa gerado so a partir do conteudo do .tar produz o
+result.txt identico ao do professor, todos os erros exigidos terminam com
+mensagem em stderr, saida 1 e sem result.txt, e nada e escrito em stdout.
