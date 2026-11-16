@@ -536,3 +536,23 @@ Comparacao: diff contra grep 'unsafe state' result.txt (1 linha)  ->  MATCH EXAT
 Outros tamanhos: 1 recurso e 4 recursos (cliente 12) tambem em uma linha so,
 sem espaco no fim.
 CORRETO porque: a linha do result.txt do professor sai identica.
+
+======================================================================
+[2026-11-16] Passo 14 - print_exceeds_max (output.c)
+======================================================================
+Escreve "The customer C request a b c was denied because exceed its maximum
+allocation" em uma unica linha, sem espaco no fim, como no result.txt do
+professor.
+Comando: gcc -Wall -Wextra -std=c99 output.c test_max_msg.c -o test_maxmsg
+Compilacao: sem warnings; ASan ok.
+Saida (cat -A):
+The customer 2 request 0 1 0 was denied because exceed its maximum allocation$
+Comparacao: diff contra grep 'maximum allocation' result.txt (1 linha)  ->  MATCH EXATO
+            cmp  -> bytes identicos
+Outros tamanhos: 1 recurso e 4 recursos (cliente 12) tambem em uma linha so,
+sem espaco no fim.
+CORRETO porque: a linha do result.txt do professor sai identica.
+Cobertura do formato: com este passo, todos os tipos de linha do result.txt
+do professor (17 linhas: 6 Allocate, 1 Release, tabela de 6 linhas + AVAILABLE,
+1 not enough, 1 unsafe, 1 maximum allocation) tem uma funcao que gera a linha
+byte a byte. Falta ligar tudo na main.

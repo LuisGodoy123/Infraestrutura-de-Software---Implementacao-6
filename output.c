@@ -70,3 +70,10 @@ void print_unsafe(FILE *out, int customer, const int *request, int m)
     print_list(out, request, m);
     fprintf(out, " was denied because result in an unsafe state\n");
 }
+
+void print_exceeds_max(FILE *out, int customer, const int *request, int m)
+{
+    fprintf(out, "The customer %d request ", customer);
+    print_list(out, request, m);
+    fprintf(out, " was denied because exceed its maximum allocation\n");
+}
