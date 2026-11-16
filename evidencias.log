@@ -601,3 +601,58 @@ SUMMARY: AddressSanitizer: 260 byte(s) leaked in 8 allocation(s).
 CORRETO porque: com free_commands o ASan nao acusa nada (inclusive com o "*"
 cujo amount e NULL e com a lista vazia); sem a chamada o mesmo teste acusa
 vazamento, entao o teste realmente verifica a liberacao.
+
+======================================================================
+[2026-11-16] Passo 17 - main (main.c) - primeiro teste de ponta a ponta
+======================================================================
+Fluxo: le e valida os argumentos, o customer.txt e o commands.txt inteiros
+antes de executar qualquer coisa (qualquer erro: mensagem em stderr, saida 1,
+sem criar result.txt); monta o estado; abre result.txt e executa os comandos
+escrevendo a linha de cada resultado; libera tudo. Se um RL liberar mais do
+que o cliente tem (caso que o PDF nao define) ou faltar memoria durante a
+execucao, a main fecha e remove o result.txt e sai com 1.
+Os arquivos sao lidos do diretorio atual (customer.txt e commands.txt) e a
+saida e result.txt no diretorio atual.
+Compilacao: gcc -Wall -Wextra -std=c99 main.c banker.c input.c output.c -o banker
+(sem warnings). Cada caso abaixo foi executado em um diretorio vazio, com os
+arquivos copiados de tests/ como customer.txt e commands.txt, e rodou tambem
+com -fsanitize=address (15 casos, nenhum problema).
+Resultados (stdout vazio em todos os casos):
+ 1. exemplo do professor (customer_ok + commands_ok), ./banker 10 5 7
+    exit=0, result.txt 755 bytes
+    diff result.txt do professor  ->  MATCH EXATO  (cmp: bytes identicos)
+ 2. exemplo do professor em CRLF (customer_ok_crlf + commands_ok_crlf)
+    exit=0, result.txt 755 bytes  ->  MATCH EXATO  (cmp: bytes identicos)
+ 3. ./banker 10 5   (menos argumentos que colunas)
+    exit=1  Erro: customer.txt linha 1: formato invalido  | sem result.txt
+ 4. ./banker 10 5 7 1   (mais argumentos que colunas)
+    exit=1  Erro: customer.txt linha 1: formato invalido  | sem result.txt
+ 5. ./banker   (sem argumentos)
+    exit=1  Erro: uso: ./banker <recurso1> <recurso2> ...  | sem result.txt
+ 6. ./banker 10 abc 7
+    exit=1  Erro: argumento invalido: abc  | sem result.txt
+ 7. sem customer.txt
+    exit=1  Erro: nao foi possivel abrir customer.txt  | sem result.txt
+ 8. sem commands.txt
+    exit=1  Erro: nao foi possivel abrir commands.txt  | sem result.txt
+ 9. customer.txt mal formado (customer_few_fields)
+    exit=1  Erro: customer.txt linha 2: formato invalido  | sem result.txt
+10. commands.txt mal formado na linha 2, com o 1o comando valido (commands_unknown)
+    exit=1  Erro: commands.txt linha 2: comando invalido  | sem result.txt
+    (prova da pre-validacao: nada e executado nem escrito antes do erro)
+11. commands.txt com cliente inexistente (commands_customer_out)
+    exit=1  Erro: commands.txt linha 2: comando invalido  | sem result.txt
+12. RL maior que o alocado (commands_release_too_much)
+    exit=1  Erro: comando 2: liberacao maior que o alocado  | sem result.txt
+13. RL valido (commands_release_ok)
+    exit=0, result.txt 130 bytes
+14. commands.txt vazio
+    exit=0, result.txt vazio (0 bytes)
+15. customer.txt vazio e commands.txt so com "*"
+    exit=0, result.txt 53 bytes (cabecalho + AVAILABLE 10 5 7 )
+CORRETO porque: o result.txt gerado a partir dos arquivos do professor e
+identico byte a byte ao result.txt do professor (755 bytes), tambem quando os
+arquivos de entrada estao em CRLF; todos os erros exigidos pelo PDF (numero
+de argumentos diferente das colunas/valores dos arquivos, arquivo
+inexistente, arquivo em formato diferente) terminam com mensagem em stderr,
+saida diferente de zero e sem result.txt; nada vai para stdout.
