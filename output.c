@@ -54,3 +54,12 @@ void print_release(FILE *out, int customer, const int *amount, int m)
     print_list(out, amount, m);
     fputc('\n', out);
 }
+
+void print_not_enough(FILE *out, const int *available, int customer, const int *request, int m)
+{
+    fprintf(out, "The resources ");
+    print_list(out, available, m);
+    fprintf(out, " are not enough to customer %d request ", customer);
+    print_list(out, request, m);
+    fprintf(out, " \n");
+}

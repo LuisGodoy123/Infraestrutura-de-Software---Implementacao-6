@@ -37,5 +37,6 @@ int release_resources(State *s, int customer, const int *release);
 void print_state(FILE *out, const State *s);
 void print_allocate(FILE *out, int customer, const int *amount, int m);
 void print_release(FILE *out, int customer, const int *amount, int m);
+void print_not_enough(FILE *out, const int *available, int customer, const int *request, int m);
 
 #endif

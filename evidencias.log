@@ -502,3 +502,20 @@ Outros tamanhos: 1 recurso -> "...the resources 7"; 4 recursos e cliente 12
 -> "...customer 12 the resources 1 2 3 4" (sem espaco no fim).
 CORRETO porque: a linha Release do result.txt do professor sai identica,
 incluindo a ausencia de espaco no final.
+
+======================================================================
+[2026-11-16] Passo 12 - print_not_enough (output.c)
+======================================================================
+Escreve "The resources X Y Z are not enough to customer C request a b c "
+(com um espaco antes do \n, como no result.txt do professor). X Y Z e o
+available no momento do pedido (3 3 2 no exemplo; o PDF mostra 3 2 2, que e
+erro de digitacao, e o result.txt e a fonte de verdade).
+Comando: gcc -Wall -Wextra -std=c99 output.c test_ne_msg.c -o test_nemsg
+Compilacao: sem warnings; ASan ok.
+Saida (cat -A):
+The resources 3 3 2 are not enough to customer 4 request 4 0 0 $
+Comparacao: diff contra grep '^The resources' result.txt (1 linha)  ->  MATCH EXATO
+            cmp  -> bytes identicos
+Outros tamanhos: 1 recurso e 4 recursos tambem terminam com espaco antes do \n.
+CORRETO porque: a linha do result.txt do professor sai identica, incluindo o
+espaco final depois do pedido.
