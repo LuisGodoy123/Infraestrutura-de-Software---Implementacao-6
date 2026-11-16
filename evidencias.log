@@ -738,3 +738,38 @@ Teste final so com o que sobrou, usando os arquivos originais do professor:
    AddressSanitizer;
  - erros: ./banker 10 5, ./banker 10 5 7 1, ./banker, ./banker 10 x 7, sem
    customer.txt e sem commands.txt -> mensagem em stderr, saida 1 e sem result.txt.
+
+======================================================================
+[2026-11-16] Passo 19 - Revisao final contra o PDF, verificacao cruzada e lagi.tar
+======================================================================
+Revisao rubrica por rubrica (README 2%, Relatorio 10%, Tratamento de Erro 8%,
+Implementacao 80%) com o codigo ja em portugues e a pasta enxuta.
+1) Suite de 44 casos sobre o codigo atual (fontes + Makefile + testes.sh +
+   tests/ em pasta temporaria): 44 passaram, 0 falharam; de novo com
+   AddressSanitizer: 44 passaram, 0 falharam; sem warnings.
+2) Verificacao cruzada: um programa de referencia em Python, escrito de forma
+   independente (a seguranca do estado e decidida por busca exaustiva de uma
+   sequencia de termino, e nao pelo algoritmo work/finish usado no C), gera
+   1500 casos aleatorios (1 a 5 recursos, 0 a 7 clientes, ate 30 comandos RQ/RL/*,
+   arquivos em LF ou CRLF, com ou sem \n final, linhas em branco no fim) e
+   compara o result.txt do banker (build com ASan) byte a byte.
+   Comando: python3 verificacao_cruzada.py ./banker 1500
+   Saida: casos: 1500 falhas: 0 (casos com RL invalido, esperado erro: 400)
+   Cobertura das linhas geradas: Allocate=4502, Release=4267,
+   not enough=1738, unsafe state=1785, exceed maximum=1133, tabela (*)=3811,
+   RL invalido=400 (esperado: saida 1, sem result.txt, stdout vazio).
+   Limite: a referencia aplica as mesmas decisoes do codigo onde o PDF e
+   omisso (RL maior que o alocado = erro), entao ela valida a implementacao,
+   nao a interpretacao do enunciado nesses pontos.
+3) Formato: o PDF mostra a tabela com espacos simples ("7 5 3 | 0 1 0 | 7 4 3")
+   e "The resources 3 2 2"; o result.txt do professor tem o preenchimento das
+   colunas e "3 3 2". Segue-se o result.txt (MATCH EXATO, 755 bytes).
+4) lagi.tar gerado fora do repositorio com lagi/{main.c, banker.c, input.c,
+   output.c, banker.h, Makefile} (so codigo e Makefile, como o PDF manda para
+   o Classroom). Extraido em pasta limpa: os 6 arquivos sao identicos (cmp) aos
+   do repositorio; make gera banker sem warnings; ./banker 10 5 7 com os
+   arquivos do professor sai com 0, stdout e stderr vazios e o result.txt e
+   identico ao do professor (MATCH EXATO, 755 bytes).
+   sha256 do lagi.tar:
+   7cafc0eec0a4717f1a8e73050be506724bada8ad62444c4ff40ccf8ca8177943
+Pendente (fora do codigo): relatorio em PDF, prints, push e upload no Classroom.
