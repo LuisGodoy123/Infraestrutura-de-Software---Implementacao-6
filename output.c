@@ -29,3 +29,21 @@ void print_state(FILE *out, const State *s)
     print_vec(out, s->available, s->m, 0);
     fputc('\n', out);
 }
+
+static void print_list(FILE *out, const int *v, int m)
+{
+    int j;
+
+    for (j = 0; j < m; j++) {
+        if (j > 0)
+            fputc(' ', out);
+        fprintf(out, "%d", v[j]);
+    }
+}
+
+void print_allocate(FILE *out, int customer, const int *amount, int m)
+{
+    fprintf(out, "Allocate to customer %d the resources ", customer);
+    print_list(out, amount, m);
+    fputc('\n', out);
+}

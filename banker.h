@@ -35,5 +35,6 @@ int is_safe(const State *s);
 int request_resources(State *s, int customer, const int *request);
 int release_resources(State *s, int customer, const int *release);
 void print_state(FILE *out, const State *s);
+void print_allocate(FILE *out, int customer, const int *amount, int m);
 
 #endif

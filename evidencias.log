@@ -462,3 +462,26 @@ CORRETO porque: as linhas 7 a 13 do result.txt do professor (cabecalho,
 5 linhas da tabela e AVAILABLE, com os espacos finais) saem identicas.
 Observacao: o PDF so mostra 3 recursos; para outras quantidades o
 preenchimento e a continuacao natural da mesma regra (nao ha exemplo).
+
+======================================================================
+[2026-11-16] Passo 10 - print_allocate (output.c)
+======================================================================
+Escreve "Allocate to customer C the resources a b c" (valores separados por
+um espaco, sem espaco no fim, terminando em \n), como no result.txt do
+professor. Usa a funcao auxiliar static print_list.
+Comando: gcc -Wall -Wextra -std=c99 output.c test_alloc_msg.c -o test_amsg
+Compilacao: output.c sem warnings (o unico aviso e do arquivo de teste
+temporario, argv sem uso); ASan ok.
+Saida (cat -A):
+Allocate to customer 0 the resources 0 2 1$
+Allocate to customer 2 the resources 3 0 2$
+Allocate to customer 1 the resources 2 0 0$
+Allocate to customer 4 the resources 0 0 2$
+Allocate to customer 3 the resources 2 1 1$
+Allocate to customer 1 the resources 1 0 2$
+Comparacao: diff contra grep '^Allocate' result.txt (6 linhas)  ->  MATCH EXATO
+            cmp  -> bytes identicos
+Outros tamanhos: 1 recurso -> "...the resources 7"; 4 recursos e cliente 12
+-> "...customer 12 the resources 1 2 3 4" (sem espaco no fim).
+CORRETO porque: as 6 linhas Allocate do result.txt do professor saem
+identicas, incluindo a ausencia de espaco no final.
