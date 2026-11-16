@@ -400,3 +400,37 @@ recursos suficientes, RQ 1 1 0 2 alocado, RQ 0 0 2 0 negado por estado
 inseguro, RQ 2 0 1 0 negado por exceder o maximo); apos cada negacao o
 available e o alloc ficam iguais aos de antes (rollback correto).
 Nao testado: o caminho REQ_ERROR (falta de memoria dentro de is_safe).
+
+======================================================================
+[2026-11-16] Passo 8 - release_resources (banker.c)
+======================================================================
+Devolve o que o cliente liberou: available += release, alloc -= release,
+need += release. Retorna 0, ou -1 (sem alterar nada) se algum valor
+liberado for maior que o que o cliente tem alocado. O PDF nao define esse
+caso; a funcao so detecta e quem chama (main) trata como erro com mensagem em
+stderr e encerra, em vez de inventar uma linha nova no result.txt.
+Comando: gcc -Wall -Wextra -std=c99 banker.c test_release.c -o test_rel && ./test_rel
+Compilacao: sem warnings; ASan ok.
+Saida (codigo devolvido; estado depois de cada RL; o inicio repete os 4
+primeiros RQ do commands.txt do professor):
+RQ 0 0 2 1 -> 0
+RQ 2 3 0 2 -> 0
+RQ 1 2 0 0 -> 0
+RQ 4 0 0 2 -> 0
+RL 0 0 1 1 -> 0
+  available: 5 4 3
+  alloc: 0 1 0 2 0 0 3 0 2 0 0 0 0 0 2
+  need: 7 4 3 1 2 2 6 0 0 2 2 2 4 3 1
+RL 0 0 5 0 -> -1      (libera mais do que tem: estado igual)
+RL 3 1 0 0 -> -1      (cliente sem nada alocado: estado igual)
+RL 0 0 0 0 -> 0       (liberacao zerada: nada muda)
+RL 4 0 0 2 -> 0
+  available: 5 4 5
+  alloc: 0 1 0 2 0 0 3 0 2 0 0 0 0 0 0
+  need: 7 4 3 1 2 2 6 0 0 2 2 2 4 3 3
+RL 0 0 2 0 -> -1      (alloc do cliente 0 e 0 1 0; estado igual)
+CORRETO porque: depois do RL 0 0 1 1 do professor o available e 5 4 3 e o
+alloc do cliente 0 volta a 0 1 0, igual ao que o request_resources do passo 7
+esperava; liberar tudo o que o cliente tem devolve o need ao valor do max
+(cliente 4: need 4 3 3 = max); liberar mais do que tem ou de um cliente sem
+nada devolve -1 e nao altera o estado.

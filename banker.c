@@ -110,3 +110,22 @@ int request_resources(State *s, int customer, const int *request)
         return REQ_UNSAFE;
     return REQ_ERROR;
 }
+
+int release_resources(State *s, int customer, const int *release)
+{
+    int m = s->m;
+    int *need = &s->need[customer * m];
+    int *alloc = &s->alloc[customer * m];
+    int j;
+
+    for (j = 0; j < m; j++) {
+        if (release[j] > alloc[j])
+            return -1;
+    }
+    for (j = 0; j < m; j++) {
+        s->available[j] += release[j];
+        alloc[j] -= release[j];
+        need[j] += release[j];
+    }
+    return 0;
+}
