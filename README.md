@@ -14,22 +14,16 @@ Implementação em C do algoritmo de Banker (Silberschatz, *Operating System Con
 | `output.c` | Escrita das linhas e da tabela do `result.txt`. |
 | `banker.h` | Structs e protótipos. |
 | `Makefile` | `make` gera `banker`; `make clean` remove objetos, executável e `result.txt`. |
-| `testes.sh` | Compila e roda todos os testes de `tests/`. |
-| `tests/` | Arquivos de teste (exemplo do enunciado, cada erro e cada caso de borda). |
 | `evidencias.log` | Registro dos testes feitos durante o desenvolvimento. |
 
-## Como compilar, executar e testar
+## Como compilar e executar
 
 ```
 make
 ./banker 10 5 7
-bash testes.sh
-bash testes.sh asan
 ```
 
-O programa lê `customer.txt` e `commands.txt` do diretório atual e escreve `result.txt` no mesmo diretório. Cada argumento é o número de instâncias de um tipo de recurso. Nada é impresso em stdout.
-
-`testes.sh` roda cada caso de `tests/` em um diretório temporário e confere o código de saída, a ausência de `result.txt` nos erros e, no exemplo do enunciado, o `result.txt` byte a byte (`tests/expected_result_ok.txt`). Com o argumento `asan` compila com AddressSanitizer.
+Cada argumento é o número de instâncias de um tipo de recurso. O programa lê `customer.txt` e `commands.txt` do diretório atual e escreve `result.txt` no mesmo diretório. Nada é impresso em stdout.
 
 ## Ambiente
 

@@ -697,3 +697,44 @@ Simulacao da entrega e da correcao do professor:
 CORRETO porque: o programa gerado so a partir do conteudo do .tar produz o
 result.txt identico ao do professor, todos os erros exigidos terminam com
 mensagem em stderr, saida 1 e sem result.txt, e nada e escrito em stdout.
+
+======================================================================
+[2026-11-16] Codigo em portugues e pasta de entrega enxuta
+======================================================================
+1) Funcoes, variaveis, structs e constantes foram renomeadas para portugues
+(sem acentos). Nao muda o comportamento: os nomes que dependem do PDF ou do
+professor foram mantidos (executavel banker, arquivos customer.txt,
+commands.txt e result.txt, comandos RQ/RL/* e todos os textos da saida).
+Os nomes dos arquivos .c/.h tambem foram mantidos. As entradas anteriores
+deste log usam os nomes antigos; correspondencia:
+  parse_int -> converter_inteiro        read_args -> ler_argumentos
+  read_customers -> ler_clientes        read_commands -> ler_comandos
+  free_commands -> liberar_comandos     init_state -> iniciar_estado
+  free_state -> liberar_estado          is_safe -> estado_seguro
+  request_resources -> pedir_recursos   release_resources -> liberar_recursos
+  print_state -> imprimir_estado        print_allocate -> imprimir_alocacao
+  print_release -> imprimir_liberacao   print_not_enough -> imprimir_sem_recursos
+  print_unsafe -> imprimir_inseguro     print_exceeds_max -> imprimir_excede_maximo
+  State -> Estado (available/max/alloc/need -> disponivel/maximo/alocado/necessidade)
+  Command -> Comando (type/customer/amount -> tipo/cliente/quantidade)
+  REQ_OK/REQ_EXCEEDS_MAX/REQ_NOT_ENOUGH/REQ_UNSAFE/REQ_ERROR ->
+  PED_OK/PED_EXCEDE_MAXIMO/PED_SEM_RECURSOS/PED_INSEGURO/PED_ERRO
+Verificacao apos a troca (WSL, gcc 15.2.0):
+ - sem nomes antigos no codigo; textos da saida preservados;
+ - 44 casos de teste: 44 passaram, 0 falharam, e de novo 44/44 com
+   AddressSanitizer; compilacao sem warnings (tambem com -O2 -pedantic);
+ - mensagens de erro iguais as de antes.
+2) A pasta do repositorio ficou so com o que o PDF pede: codigo (main.c,
+banker.c, input.c, output.c, banker.h), Makefile, README.md e este log. Os
+arquivos de teste citados acima (pasta tests/ e script testes.sh, que
+incluem copias dos arquivos do professor) foram retirados da pasta de entrega
+e guardados fora dela; os testes deste log foram executados com eles.
+Teste final so com o que sobrou, usando os arquivos originais do professor:
+ - lagi.tar simulado com lagi/{main.c,banker.c,input.c,output.c,banker.h,Makefile};
+   extraido em outra pasta: make gera banker sem warnings;
+ - ./banker 10 5 7 com o customer.txt e o commands.txt do professor: saida 0,
+   stdout e stderr vazios, result.txt de 755 bytes, diff contra o result.txt
+   do professor -> MATCH EXATO (cmp: bytes identicos); tambem com build
+   AddressSanitizer;
+ - erros: ./banker 10 5, ./banker 10 5 7 1, ./banker, ./banker 10 x 7, sem
+   customer.txt e sem commands.txt -> mensagem em stderr, saida 1 e sem result.txt.

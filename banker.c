@@ -2,138 +2,141 @@
 #include <stdlib.h>
 #include "banker.h"
 
-int init_state(State *s, int n, int m, const int *resources, const int *max)
+int iniciar_estado(Estado *estado, int nc, int nr, const int *recursos, const int *maximo)
 {
     int i;
 
-    s->n = n;
-    s->m = m;
-    s->available = malloc(m * sizeof(int));
-    s->max = malloc(n * m * sizeof(int));
-    s->alloc = calloc(n * m, sizeof(int));
-    s->need = malloc(n * m * sizeof(int));
-    if (s->available == NULL || (n > 0 && (s->max == NULL || s->alloc == NULL || s->need == NULL))) {
+    estado->n_clientes = nc;
+    estado->n_recursos = nr;
+    estado->disponivel = malloc(nr * sizeof(int));
+    estado->maximo = malloc(nc * nr * sizeof(int));
+    estado->alocado = calloc(nc * nr, sizeof(int));
+    estado->necessidade = malloc(nc * nr * sizeof(int));
+    if (estado->disponivel == NULL ||
+        (nc > 0 && (estado->maximo == NULL || estado->alocado == NULL || estado->necessidade == NULL))) {
         fprintf(stderr, "Erro: sem memoria\n");
-        free(s->available);
-        free(s->max);
-        free(s->alloc);
-        free(s->need);
+        free(estado->disponivel);
+        free(estado->maximo);
+        free(estado->alocado);
+        free(estado->necessidade);
         return -1;
     }
-    for (i = 0; i < m; i++)
-        s->available[i] = resources[i];
-    for (i = 0; i < n * m; i++) {
-        s->max[i] = max[i];
-        s->need[i] = max[i];
+    for (i = 0; i < nr; i++)
+        estado->disponivel[i] = recursos[i];
+    for (i = 0; i < nc * nr; i++) {
+        estado->maximo[i] = maximo[i];
+        estado->necessidade[i] = maximo[i];
     }
     return 0;
 }
 
-int is_safe(const State *s)
+void liberar_estado(Estado *estado)
 {
-    int *work;
-    int *finish;
-    int found, ok;
+    free(estado->disponivel);
+    free(estado->maximo);
+    free(estado->alocado);
+    free(estado->necessidade);
+}
+
+int estado_seguro(const Estado *estado)
+{
+    int nc = estado->n_clientes;
+    int nr = estado->n_recursos;
+    int *trabalho;
+    int *terminou;
+    int achou, ok;
     int i, j;
 
-    if (s->n == 0)
+    if (nc == 0)
         return 1;
-    work = malloc(s->m * sizeof(int));
-    finish = calloc(s->n, sizeof(int));
-    if (work == NULL || finish == NULL) {
+    trabalho = malloc(nr * sizeof(int));
+    terminou = calloc(nc, sizeof(int));
+    if (trabalho == NULL || terminou == NULL) {
         fprintf(stderr, "Erro: sem memoria\n");
-        free(work);
-        free(finish);
+        free(trabalho);
+        free(terminou);
         return -1;
     }
-    for (j = 0; j < s->m; j++)
-        work[j] = s->available[j];
+    for (j = 0; j < nr; j++)
+        trabalho[j] = estado->disponivel[j];
     do {
-        found = 0;
-        for (i = 0; i < s->n; i++) {
-            if (finish[i])
+        achou = 0;
+        for (i = 0; i < nc; i++) {
+            if (terminou[i])
                 continue;
             ok = 1;
-            for (j = 0; j < s->m; j++) {
-                if (s->need[i * s->m + j] > work[j]) {
+            for (j = 0; j < nr; j++) {
+                if (estado->necessidade[i * nr + j] > trabalho[j]) {
                     ok = 0;
                     break;
                 }
             }
             if (ok) {
-                for (j = 0; j < s->m; j++)
-                    work[j] += s->alloc[i * s->m + j];
-                finish[i] = 1;
-                found = 1;
+                for (j = 0; j < nr; j++)
+                    trabalho[j] += estado->alocado[i * nr + j];
+                terminou[i] = 1;
+                achou = 1;
             }
         }
-    } while (found);
+    } while (achou);
     ok = 1;
-    for (i = 0; i < s->n; i++) {
-        if (!finish[i])
+    for (i = 0; i < nc; i++) {
+        if (!terminou[i])
             ok = 0;
     }
-    free(work);
-    free(finish);
+    free(trabalho);
+    free(terminou);
     return ok;
 }
 
-int request_resources(State *s, int customer, const int *request)
+int pedir_recursos(Estado *estado, int cliente, const int *pedido)
 {
-    int m = s->m;
-    int *need = &s->need[customer * m];
-    int *alloc = &s->alloc[customer * m];
+    int nr = estado->n_recursos;
+    int *necessidade = &estado->necessidade[cliente * nr];
+    int *alocado = &estado->alocado[cliente * nr];
     int j, r;
 
-    for (j = 0; j < m; j++) {
-        if (request[j] > need[j])
-            return REQ_EXCEEDS_MAX;
+    for (j = 0; j < nr; j++) {
+        if (pedido[j] > necessidade[j])
+            return PED_EXCEDE_MAXIMO;
     }
-    for (j = 0; j < m; j++) {
-        if (request[j] > s->available[j])
-            return REQ_NOT_ENOUGH;
+    for (j = 0; j < nr; j++) {
+        if (pedido[j] > estado->disponivel[j])
+            return PED_SEM_RECURSOS;
     }
-    for (j = 0; j < m; j++) {
-        s->available[j] -= request[j];
-        alloc[j] += request[j];
-        need[j] -= request[j];
+    for (j = 0; j < nr; j++) {
+        estado->disponivel[j] -= pedido[j];
+        alocado[j] += pedido[j];
+        necessidade[j] -= pedido[j];
     }
-    r = is_safe(s);
+    r = estado_seguro(estado);
     if (r == 1)
-        return REQ_OK;
-    for (j = 0; j < m; j++) {
-        s->available[j] += request[j];
-        alloc[j] -= request[j];
-        need[j] += request[j];
+        return PED_OK;
+    for (j = 0; j < nr; j++) {
+        estado->disponivel[j] += pedido[j];
+        alocado[j] -= pedido[j];
+        necessidade[j] += pedido[j];
     }
     if (r == 0)
-        return REQ_UNSAFE;
-    return REQ_ERROR;
+        return PED_INSEGURO;
+    return PED_ERRO;
 }
 
-int release_resources(State *s, int customer, const int *release)
+int liberar_recursos(Estado *estado, int cliente, const int *devolucao)
 {
-    int m = s->m;
-    int *need = &s->need[customer * m];
-    int *alloc = &s->alloc[customer * m];
+    int nr = estado->n_recursos;
+    int *necessidade = &estado->necessidade[cliente * nr];
+    int *alocado = &estado->alocado[cliente * nr];
     int j;
 
-    for (j = 0; j < m; j++) {
-        if (release[j] > alloc[j])
+    for (j = 0; j < nr; j++) {
+        if (devolucao[j] > alocado[j])
             return -1;
     }
-    for (j = 0; j < m; j++) {
-        s->available[j] += release[j];
-        alloc[j] -= release[j];
-        need[j] += release[j];
+    for (j = 0; j < nr; j++) {
+        estado->disponivel[j] += devolucao[j];
+        alocado[j] -= devolucao[j];
+        necessidade[j] += devolucao[j];
     }
     return 0;
-}
-
-void free_state(State *s)
-{
-    free(s->available);
-    free(s->max);
-    free(s->alloc);
-    free(s->need);
 }

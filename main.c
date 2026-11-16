@@ -4,70 +4,70 @@
 
 int main(int argc, char *argv[])
 {
-    int *resources;
-    int *max;
-    Command *cmds;
-    State s;
-    FILE *out;
-    int m, n, count, i, r;
+    int *recursos;
+    int *maximo;
+    Comando *comandos;
+    Estado estado;
+    FILE *saida;
+    int nr, nc, total, i, r;
     int erro = 0;
 
-    m = read_args(argc, argv, &resources);
-    if (m < 0)
+    nr = ler_argumentos(argc, argv, &recursos);
+    if (nr < 0)
         return 1;
-    n = read_customers("customer.txt", m, &max);
-    if (n < 0) {
-        free(resources);
-        return 1;
-    }
-    count = read_commands("commands.txt", n, m, &cmds);
-    if (count < 0) {
-        free(resources);
-        free(max);
+    nc = ler_clientes("customer.txt", nr, &maximo);
+    if (nc < 0) {
+        free(recursos);
         return 1;
     }
-    r = init_state(&s, n, m, resources, max);
-    free(resources);
-    free(max);
+    total = ler_comandos("commands.txt", nc, nr, &comandos);
+    if (total < 0) {
+        free(recursos);
+        free(maximo);
+        return 1;
+    }
+    r = iniciar_estado(&estado, nc, nr, recursos, maximo);
+    free(recursos);
+    free(maximo);
     if (r != 0) {
-        free_commands(cmds, count);
+        liberar_comandos(comandos, total);
         return 1;
     }
-    out = fopen("result.txt", "w");
-    if (out == NULL) {
+    saida = fopen("result.txt", "w");
+    if (saida == NULL) {
         fprintf(stderr, "Erro: nao foi possivel criar result.txt\n");
-        free_state(&s);
-        free_commands(cmds, count);
+        liberar_estado(&estado);
+        liberar_comandos(comandos, total);
         return 1;
     }
-    for (i = 0; i < count && !erro; i++) {
-        if (cmds[i].type == '*') {
-            print_state(out, &s);
-        } else if (cmds[i].type == 'L') {
-            if (release_resources(&s, cmds[i].customer, cmds[i].amount) != 0) {
+    for (i = 0; i < total && !erro; i++) {
+        if (comandos[i].tipo == '*') {
+            imprimir_estado(saida, &estado);
+        } else if (comandos[i].tipo == 'L') {
+            if (liberar_recursos(&estado, comandos[i].cliente, comandos[i].quantidade) != 0) {
                 fprintf(stderr, "Erro: comando %d: liberacao maior que o alocado\n", i + 1);
                 erro = 1;
             } else {
-                print_release(out, cmds[i].customer, cmds[i].amount, m);
+                imprimir_liberacao(saida, comandos[i].cliente, comandos[i].quantidade, nr);
             }
         } else {
-            r = request_resources(&s, cmds[i].customer, cmds[i].amount);
-            if (r == REQ_OK)
-                print_allocate(out, cmds[i].customer, cmds[i].amount, m);
-            else if (r == REQ_EXCEEDS_MAX)
-                print_exceeds_max(out, cmds[i].customer, cmds[i].amount, m);
-            else if (r == REQ_NOT_ENOUGH)
-                print_not_enough(out, s.available, cmds[i].customer, cmds[i].amount, m);
-            else if (r == REQ_UNSAFE)
-                print_unsafe(out, cmds[i].customer, cmds[i].amount, m);
+            r = pedir_recursos(&estado, comandos[i].cliente, comandos[i].quantidade);
+            if (r == PED_OK)
+                imprimir_alocacao(saida, comandos[i].cliente, comandos[i].quantidade, nr);
+            else if (r == PED_EXCEDE_MAXIMO)
+                imprimir_excede_maximo(saida, comandos[i].cliente, comandos[i].quantidade, nr);
+            else if (r == PED_SEM_RECURSOS)
+                imprimir_sem_recursos(saida, estado.disponivel, comandos[i].cliente, comandos[i].quantidade, nr);
+            else if (r == PED_INSEGURO)
+                imprimir_inseguro(saida, comandos[i].cliente, comandos[i].quantidade, nr);
             else
                 erro = 1;
         }
     }
-    fclose(out);
+    fclose(saida);
     if (erro)
         remove("result.txt");
-    free_state(&s);
-    free_commands(cmds, count);
+    liberar_estado(&estado);
+    liberar_comandos(comandos, total);
     return erro;
 }

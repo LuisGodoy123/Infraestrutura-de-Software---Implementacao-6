@@ -1,79 +1,80 @@
 #include <stdio.h>
 #include "banker.h"
 
-static void print_vec(FILE *out, const int *v, int m, int width)
+static void imprimir_vetor(FILE *saida, const int *v, int n, int largura)
 {
     int j;
-    int count = 0;
+    int escritos = 0;
 
-    for (j = 0; j < m; j++)
-        count += fprintf(out, "%d ", v[j]);
-    for (; count < width; count++)
-        fputc(' ', out);
+    for (j = 0; j < n; j++)
+        escritos += fprintf(saida, "%d ", v[j]);
+    for (; escritos < largura; escritos++)
+        fputc(' ', saida);
 }
 
-void print_state(FILE *out, const State *s)
+void imprimir_estado(FILE *saida, const Estado *estado)
 {
+    int nr = estado->n_recursos;
     int i;
 
-    fprintf(out, "%-10s|   %-12s|   %s\n", "MAXIMUM", "ALLOCATION", "NEED");
-    for (i = 0; i < s->n; i++) {
-        print_vec(out, &s->max[i * s->m], s->m, 10);
-        fprintf(out, "|   ");
-        print_vec(out, &s->alloc[i * s->m], s->m, 12);
-        fprintf(out, "|   ");
-        print_vec(out, &s->need[i * s->m], s->m, 0);
-        fputc('\n', out);
+    fprintf(saida, "%-10s|   %-12s|   %s\n", "MAXIMUM", "ALLOCATION", "NEED");
+    for (i = 0; i < estado->n_clientes; i++) {
+        imprimir_vetor(saida, &estado->maximo[i * nr], nr, 10);
+        fprintf(saida, "|   ");
+        imprimir_vetor(saida, &estado->alocado[i * nr], nr, 12);
+        fprintf(saida, "|   ");
+        imprimir_vetor(saida, &estado->necessidade[i * nr], nr, 0);
+        fputc('\n', saida);
     }
-    fprintf(out, "AVAILABLE ");
-    print_vec(out, s->available, s->m, 0);
-    fputc('\n', out);
+    fprintf(saida, "AVAILABLE ");
+    imprimir_vetor(saida, estado->disponivel, nr, 0);
+    fputc('\n', saida);
 }
 
-static void print_list(FILE *out, const int *v, int m)
+static void imprimir_lista(FILE *saida, const int *v, int n)
 {
     int j;
 
-    for (j = 0; j < m; j++) {
+    for (j = 0; j < n; j++) {
         if (j > 0)
-            fputc(' ', out);
-        fprintf(out, "%d", v[j]);
+            fputc(' ', saida);
+        fprintf(saida, "%d", v[j]);
     }
 }
 
-void print_allocate(FILE *out, int customer, const int *amount, int m)
+void imprimir_alocacao(FILE *saida, int cliente, const int *quantidade, int nr)
 {
-    fprintf(out, "Allocate to customer %d the resources ", customer);
-    print_list(out, amount, m);
-    fputc('\n', out);
+    fprintf(saida, "Allocate to customer %d the resources ", cliente);
+    imprimir_lista(saida, quantidade, nr);
+    fputc('\n', saida);
 }
 
-void print_release(FILE *out, int customer, const int *amount, int m)
+void imprimir_liberacao(FILE *saida, int cliente, const int *quantidade, int nr)
 {
-    fprintf(out, "Release from customer %d the resources ", customer);
-    print_list(out, amount, m);
-    fputc('\n', out);
+    fprintf(saida, "Release from customer %d the resources ", cliente);
+    imprimir_lista(saida, quantidade, nr);
+    fputc('\n', saida);
 }
 
-void print_not_enough(FILE *out, const int *available, int customer, const int *request, int m)
+void imprimir_sem_recursos(FILE *saida, const int *disponivel, int cliente, const int *pedido, int nr)
 {
-    fprintf(out, "The resources ");
-    print_list(out, available, m);
-    fprintf(out, " are not enough to customer %d request ", customer);
-    print_list(out, request, m);
-    fprintf(out, " \n");
+    fprintf(saida, "The resources ");
+    imprimir_lista(saida, disponivel, nr);
+    fprintf(saida, " are not enough to customer %d request ", cliente);
+    imprimir_lista(saida, pedido, nr);
+    fprintf(saida, " \n");
 }
 
-void print_unsafe(FILE *out, int customer, const int *request, int m)
+void imprimir_inseguro(FILE *saida, int cliente, const int *pedido, int nr)
 {
-    fprintf(out, "The customer %d request ", customer);
-    print_list(out, request, m);
-    fprintf(out, " was denied because result in an unsafe state\n");
+    fprintf(saida, "The customer %d request ", cliente);
+    imprimir_lista(saida, pedido, nr);
+    fprintf(saida, " was denied because result in an unsafe state\n");
 }
 
-void print_exceeds_max(FILE *out, int customer, const int *request, int m)
+void imprimir_excede_maximo(FILE *saida, int cliente, const int *pedido, int nr)
 {
-    fprintf(out, "The customer %d request ", customer);
-    print_list(out, request, m);
-    fprintf(out, " was denied because exceed its maximum allocation\n");
+    fprintf(saida, "The customer %d request ", cliente);
+    imprimir_lista(saida, pedido, nr);
+    fprintf(saida, " was denied because exceed its maximum allocation\n");
 }

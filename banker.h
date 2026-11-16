@@ -4,43 +4,43 @@
 #include <stdio.h>
 
 typedef struct {
-    char type;
-    int customer;
-    int *amount;
-} Command;
+    int n_clientes;
+    int n_recursos;
+    int *disponivel;
+    int *maximo;
+    int *alocado;
+    int *necessidade;
+} Estado;
 
 typedef struct {
-    int n;
-    int m;
-    int *available;
-    int *max;
-    int *alloc;
-    int *need;
-} State;
+    char tipo;
+    int cliente;
+    int *quantidade;
+} Comando;
 
 enum {
-    REQ_OK,
-    REQ_EXCEEDS_MAX,
-    REQ_NOT_ENOUGH,
-    REQ_UNSAFE,
-    REQ_ERROR
+    PED_OK,
+    PED_EXCEDE_MAXIMO,
+    PED_SEM_RECURSOS,
+    PED_INSEGURO,
+    PED_ERRO
 };
 
-int parse_int(const char *s, int *out);
-int read_args(int argc, char *argv[], int **resources);
-int read_customers(const char *path, int m, int **max);
-int read_commands(const char *path, int n, int m, Command **cmds);
-void free_commands(Command *cmds, int count);
-int init_state(State *s, int n, int m, const int *resources, const int *max);
-void free_state(State *s);
-int is_safe(const State *s);
-int request_resources(State *s, int customer, const int *request);
-int release_resources(State *s, int customer, const int *release);
-void print_state(FILE *out, const State *s);
-void print_allocate(FILE *out, int customer, const int *amount, int m);
-void print_release(FILE *out, int customer, const int *amount, int m);
-void print_not_enough(FILE *out, const int *available, int customer, const int *request, int m);
-void print_unsafe(FILE *out, int customer, const int *request, int m);
-void print_exceeds_max(FILE *out, int customer, const int *request, int m);
+int converter_inteiro(const char *texto, int *saida);
+int ler_argumentos(int argc, char *argv[], int **recursos);
+int ler_clientes(const char *caminho, int nr, int **maximo);
+int ler_comandos(const char *caminho, int nc, int nr, Comando **comandos);
+void liberar_comandos(Comando *comandos, int total);
+int iniciar_estado(Estado *estado, int nc, int nr, const int *recursos, const int *maximo);
+void liberar_estado(Estado *estado);
+int estado_seguro(const Estado *estado);
+int pedir_recursos(Estado *estado, int cliente, const int *pedido);
+int liberar_recursos(Estado *estado, int cliente, const int *devolucao);
+void imprimir_estado(FILE *saida, const Estado *estado);
+void imprimir_alocacao(FILE *saida, int cliente, const int *quantidade, int nr);
+void imprimir_liberacao(FILE *saida, int cliente, const int *quantidade, int nr);
+void imprimir_sem_recursos(FILE *saida, const int *disponivel, int cliente, const int *pedido, int nr);
+void imprimir_inseguro(FILE *saida, int cliente, const int *pedido, int nr);
+void imprimir_excede_maximo(FILE *saida, int cliente, const int *pedido, int nr);
 
 #endif
