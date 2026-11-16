@@ -519,3 +519,20 @@ Comparacao: diff contra grep '^The resources' result.txt (1 linha)  ->  MATCH EX
 Outros tamanhos: 1 recurso e 4 recursos tambem terminam com espaco antes do \n.
 CORRETO porque: a linha do result.txt do professor sai identica, incluindo o
 espaco final depois do pedido.
+
+======================================================================
+[2026-11-16] Passo 13 - print_unsafe (output.c)
+======================================================================
+Escreve "The customer C request a b c was denied because result in an unsafe
+state" em uma unica linha, sem espaco no fim, como no result.txt do
+professor (no PDF a frase quebra depois de "unsafe", mas e so a diagramacao
+da pagina).
+Comando: gcc -Wall -Wextra -std=c99 output.c test_uns_msg.c -o test_unsmsg
+Compilacao: sem warnings; ASan ok.
+Saida (cat -A):
+The customer 0 request 0 2 0 was denied because result in an unsafe state$
+Comparacao: diff contra grep 'unsafe state' result.txt (1 linha)  ->  MATCH EXATO
+            cmp  -> bytes identicos
+Outros tamanhos: 1 recurso e 4 recursos (cliente 12) tambem em uma linha so,
+sem espaco no fim.
+CORRETO porque: a linha do result.txt do professor sai identica.

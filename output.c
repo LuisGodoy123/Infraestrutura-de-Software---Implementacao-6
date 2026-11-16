@@ -63,3 +63,10 @@ void print_not_enough(FILE *out, const int *available, int customer, const int *
     print_list(out, request, m);
     fprintf(out, " \n");
 }
+
+void print_unsafe(FILE *out, int customer, const int *request, int m)
+{
+    fprintf(out, "The customer %d request ", customer);
+    print_list(out, request, m);
+    fprintf(out, " was denied because result in an unsafe state\n");
+}
