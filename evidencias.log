@@ -578,3 +578,26 @@ SUMMARY: AddressSanitizer: 207 byte(s) leaked in 8 allocation(s).
 CORRETO porque: com free_state o ASan nao acusa nada (inclusive no estado
 com 0 clientes); sem a chamada o mesmo teste acusa vazamento, entao o teste
 realmente verifica a liberacao.
+
+======================================================================
+[2026-11-16] Passo 16 - free_commands (input.c)
+======================================================================
+Libera o vetor amount de cada comando e depois a propria lista devolvida por
+read_commands. Funciona com lista vazia (count=0, lista NULL).
+Comando: gcc -Wall -Wextra -std=c99 input.c test_freecmd.c -o test_freecmd
+Compilacao: sem warnings. O teste le tests/commands_ok.txt (11 comandos,
+um deles "*" sem amount) e tests/commands_empty.txt (0 comandos) e libera
+os dois com free_commands.
+Saida com -fsanitize=address:
+--- com free_commands ---
+exit=0
+commands_ok.txt: count=11
+commands_empty.txt: count=0
+ASAN: ok (nenhum vazamento)
+--- sem chamar free_commands no commands_ok.txt ---
+exit=1
+ASAN: vazamento detectado
+SUMMARY: AddressSanitizer: 260 byte(s) leaked in 8 allocation(s).
+CORRETO porque: com free_commands o ASan nao acusa nada (inclusive com o "*"
+cujo amount e NULL e com a lista vazia); sem a chamada o mesmo teste acusa
+vazamento, entao o teste realmente verifica a liberacao.

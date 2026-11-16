@@ -242,3 +242,12 @@ int read_commands(const char *path, int n, int m, Command **cmds)
     *cmds = list;
     return count;
 }
+
+void free_commands(Command *cmds, int count)
+{
+    int i;
+
+    for (i = 0; i < count; i++)
+        free(cmds[i].amount);
+    free(cmds);
+}
