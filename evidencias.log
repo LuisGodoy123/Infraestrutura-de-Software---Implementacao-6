@@ -485,3 +485,20 @@ Outros tamanhos: 1 recurso -> "...the resources 7"; 4 recursos e cliente 12
 -> "...customer 12 the resources 1 2 3 4" (sem espaco no fim).
 CORRETO porque: as 6 linhas Allocate do result.txt do professor saem
 identicas, incluindo a ausencia de espaco no final.
+
+======================================================================
+[2026-11-16] Passo 11 - print_release (output.c)
+======================================================================
+Escreve "Release from customer C the resources a b c" (mesmo formato do
+Allocate: valores separados por um espaco, sem espaco no fim, terminando em
+\n), como no result.txt do professor. Reaproveita print_list.
+Comando: gcc -Wall -Wextra -std=c99 output.c test_rel_msg.c -o test_rmsg
+Compilacao: sem warnings; ASan ok.
+Saida (cat -A):
+Release from customer 0 the resources 0 1 1$
+Comparacao: diff contra grep '^Release' result.txt (1 linha)  ->  MATCH EXATO
+            cmp  -> bytes identicos
+Outros tamanhos: 1 recurso -> "...the resources 7"; 4 recursos e cliente 12
+-> "...customer 12 the resources 1 2 3 4" (sem espaco no fim).
+CORRETO porque: a linha Release do result.txt do professor sai identica,
+incluindo a ausencia de espaco no final.

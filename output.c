@@ -47,3 +47,10 @@ void print_allocate(FILE *out, int customer, const int *amount, int m)
     print_list(out, amount, m);
     fputc('\n', out);
 }
+
+void print_release(FILE *out, int customer, const int *amount, int m)
+{
+    fprintf(out, "Release from customer %d the resources ", customer);
+    print_list(out, amount, m);
+    fputc('\n', out);
+}
